@@ -1,5 +1,4 @@
 plugins {
-    id("com.android.library")
     kotlin("multiplatform")
 }
 
@@ -12,13 +11,13 @@ kotlin {
             }
         }
     }
-    android {
-        publishAllLibraryVariants()
-    }
     macosX64 {
         binaries {
             framework {
                 export(project(":kotlin-hsmodel"))
+                export(project(":kotlin-hsreplay-api"))
+
+                freeCompilerArgs = freeCompilerArgs + "-Xg0" // will soon become "-Xadd-light-debug=enable" with https://github.com/JetBrains/kotlin-native/pull/4085/files
             }
         }
     }
@@ -34,32 +33,20 @@ kotlin {
                 api(project(":kotlin-console"))
             }
         }
-        jvm().compilations["test"].defaultSourceSet {
+        val jvmTest by getting {
             dependencies {
                 implementation(Libs.kotlinTestJvm)
                 implementation(Libs.serializationRuntime)
             }
         }
-        named("androidMain") {
+        val macosX64Main by getting {
             dependencies {
-                implementation(kotlin("stdlib"))
+                // Not really 100% sure why this is not inherited from the commonMain dependencies but it's required
+                // to have auttocompletion
+                api(project(":kotlin-hsmodel"))
+                api(project(":kotlin-hsreplay-api"))
+                api(project(":kotlin-console"))
             }
         }
-        macosX64().compilations["main"].defaultSourceSet {
-            dependencies {
-            }
-        }
-    }
-}
-
-android {
-    compileSdkVersion(Versions.compileSdkVersion)
-    defaultConfig {
-        minSdkVersion(Versions.minSdkVersion)
-        targetSdkVersion(Versions.targetSdkVersion)
-    }
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
     }
 }
